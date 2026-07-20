@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PropIQ — Real Estate Investment Analyzer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
+:root{
+ --bg:#f4f7fb;--s1:#ffffff;--s2:#f7f9fc;--s3:#eef3f9;--s4:#e3ebf4;
+ --b1:rgba(18,38,63,.08);--b2:rgba(18,38,63,.14);
+ --blue:#2f6fed;--blueg:rgba(47,111,237,.08);--blueb:rgba(47,111,237,.22);
+ --green:#1ba974;--greeng:rgba(27,169,116,.10);--greenb:rgba(27,169,116,.25);
+ --gold:#c9881f;--goldg:rgba(201,136,31,.10);
+ --red:#e0506a;--redg:rgba(224,80,106,.10);--amber:#dd8a2a;--amberg:rgba(221,138,42,.12);
+ --teal:#13a0a8;--tealg:rgba(19,160,168,.10);
+ --txt:#16263d;--txt2:#5a6b82;--txt3:#93a2b6;
+ --r:11px;--rl:15px;--rs:7px;
+ --shadow:0 1px 3px rgba(18,38,63,.06),0 4px 16px rgba(18,38,63,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;padding:14px;max-width:900px;margin:0 auto;-webkit-font-smoothing:antialiased}
+.heading{font-family:'Syne',sans-serif;font-weight:800;letter-spacing:-.02em}
+.number{font-family:'DM Mono',monospace;font-weight:500}
+.label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--txt3)}
+.mut{color:var(--txt2)}
+.screen{display:none}.screen.on{display:block;animation:fu .35s ease}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);padding:17px 19px;margin-bottom:11px;box-shadow:var(--shadow)}
+.card.cb{border-color:var(--blueb);background:linear-gradient(135deg,var(--blueg),var(--s1))}
+.card.cg{border-color:var(--greenb);background:linear-gradient(135deg,var(--greeng),var(--s1))}
+.card.ct2{border-color:rgba(19,160,168,.25);background:linear-gradient(135deg,var(--tealg),var(--s1))}
+.ct{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ct::after{content:'';flex:1;height:1px;background:var(--b1)}
+.btn{font-family:'DM Sans';font-weight:600;font-size:13px;padding:11px 20px;border-radius:var(--r);border:1px solid var(--b2);background:var(--s1);color:var(--txt);cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--s3);transform:translateY(-1px)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(47,111,237,.3)}
+.btn.primary:hover{box-shadow:0 4px 14px rgba(47,111,237,.42)}
+.btn.green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+input[type=text],input[type=number],input[type=password],select{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:10px 12px;color:var(--txt);font-family:'DM Sans';font-size:13px;outline:none;transition:border .15s}
+input:focus,select:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px var(--blueg)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.f{margin-bottom:11px}
+.f label{display:block;font-size:10px;color:var(--txt2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono'}
+.f .hint{font-size:10px;color:var(--txt3);margin-top:3px;line-height:1.4}
+.hero{background:linear-gradient(135deg,#fff,var(--s2));border:1px solid var(--b1);border-radius:var(--rl);padding:19px;margin-bottom:11px;box-shadow:var(--shadow)}
+.hrow{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.addr{flex:1;min-width:200px}.addr h1{font-size:18px;line-height:1.15;margin-bottom:4px}.addr .sub{font-size:12px;color:var(--txt2)}
+.facts{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap}.fact{font-size:11px;color:var(--txt2)}.fact b{color:var(--txt);font-family:'DM Mono'}
+.ring-wrap{display:flex;align-items:center;gap:12px}
+.pills{display:flex;flex-direction:column;gap:6px}
+.pill{font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;text-align:center;white-space:nowrap}
+.pill.grade{background:var(--blueg);color:var(--blue);border:1px solid var(--blueb)}
+.pill.verd{background:var(--amberg);color:var(--amber);border:1px solid rgba(221,138,42,.3)}
+.strat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.strat{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:10px 6px;text-align:center}
+.strat.primary{background:var(--blueg);border-color:var(--blueb)}
+.strat .nm{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.strat .vv{font-family:'DM Mono';font-weight:500;font-size:17px}.strat .gd{font-size:8.5px;margin-top:2px}
+.slider-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);padding:16px 19px;margin-bottom:11px;box-shadow:var(--shadow)}
+.slider-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}
+.slider-top .pl{font-family:'Syne';font-weight:800;font-size:22px;color:var(--blue)}
+.slider-top .vs{font-size:10.5px;color:var(--txt2);text-align:right}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;outline:none;cursor:pointer;background:var(--s4)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 1px 5px rgba(47,111,237,.5);transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--blue);border:3px solid #fff;cursor:pointer}
+.slider-scale{display:flex;justify-content:space-between;font-size:9px;color:var(--txt3);margin-top:6px;font-family:'DM Mono'}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:11px}
+.kpi{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:11px 12px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.kpi .label{margin-bottom:5px}.kpi .v{font-family:'DM Mono';font-weight:500;font-size:15px}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 var(--r) var(--r)}
+.kpos::after{background:var(--green)}.kneg::after{background:var(--red)}.kgold::after{background:var(--gold)}.kblue::after{background:var(--blue)}.kamber::after{background:var(--amber)}
+.hh-feat{background:linear-gradient(135deg,var(--blueg),var(--s1));border:1px solid var(--blueb);border-radius:var(--r);padding:15px 17px;margin-bottom:11px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
+.hh-circle{width:58px;height:58px;border-radius:50%;background:var(--blueg);border:2px solid var(--blueb);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.hh-circle .n{font-family:'DM Mono';font-weight:500;font-size:20px;color:var(--blue)}.hh-circle .l{font-size:7px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em}
+.hh-body{flex:1}.hh-body .t{font-size:13px;font-weight:600;margin-bottom:2px}.hh-body .s{font-size:10.5px;color:var(--txt2);margin-bottom:9px}
+.hh-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hh-stat .sl{font-size:8.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}.hh-stat .sv{font-family:'DM Mono';font-weight:500;font-size:14px;margin-top:1px}
+.tabs{display:flex;gap:3px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:4px;margin-bottom:12px;box-shadow:var(--shadow);overflow-x:auto}
+.tab{flex:1;padding:9px 6px;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;color:var(--txt3);transition:all .2s;text-align:center;border:1px solid transparent;user-select:none;white-space:nowrap}
+.tab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.page{display:none;animation:fu .35s ease}.page.on{display:block}
+.crit{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.cl{font-size:11px;color:var(--txt2);min-width:170px}
+.cb2{flex:1;height:5px;background:var(--s4);border-radius:3px;overflow:hidden}
+.cf2{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.cp{font-family:'DM Mono';font-size:11px;font-weight:500;min-width:42px;text-align:right}
+.chgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+.ch{position:relative}.ch.h180{height:180px}.ch.h200{height:200px}.ch.h210{height:210px}.ch.h230{height:230px}
+.met3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px}
+.met{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px 13px}
+.met .l{font-size:8.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em}.met .v{font-family:'DM Mono';font-weight:500;font-size:16px;margin-top:3px}
+.off3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:4px}
+.ot{border:1px solid var(--b1);border-radius:var(--r);padding:13px;text-align:center;background:var(--s2)}
+.ot .l{font-size:8.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}.ot .v{font-family:'DM Mono';font-weight:500;font-size:16px}
+.ott{background:var(--greeng);border-color:var(--greenb)}
+.seq3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:4px}
+.seq{border:1px solid var(--b1);border-radius:var(--r);padding:14px;background:var(--s2);position:relative;overflow:hidden}
+.seqg{font-family:'Syne';font-size:46px;font-weight:800;color:rgba(18,38,63,.04);position:absolute;top:4px;right:8px;line-height:1}
+.seq .sh{font-size:11px;font-weight:700;margin-bottom:4px;position:relative}.seq .sd{font-size:10px;color:var(--txt2);line-height:1.45;position:relative}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{text-align:right;font-family:'DM Mono';font-size:8.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;padding:8px 7px;border-bottom:1px solid var(--b1)}
+th:first-child,td:first-child{text-align:left}
+td{padding:9px 7px;border-bottom:1px solid var(--b1);font-family:'DM Mono';color:var(--txt)}
+tr:last-child td{border-bottom:none}
+.formula{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:13px 15px;font-family:'DM Mono';font-size:11px;color:var(--txt2);line-height:1.7}
+.formula b{color:var(--blue)}
+.note{font-size:10.5px;color:var(--txt2);line-height:1.5;margin-top:8px}
+.tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:5px;font-family:'DM Mono';margin-right:4px}.ta{background:var(--amberg);color:var(--amber)}
+.payviz{display:flex;flex-direction:column;gap:16px;margin-bottom:14px}
+.paylabel{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:7px;font-family:'DM Mono'}
+.paybar-track{display:flex;height:42px;border-radius:9px;overflow:hidden;background:var(--s3);border:1px solid var(--b1)}
+.paybar{display:flex;align-items:center;justify-content:center;font-family:'DM Mono';font-size:11px;font-weight:500;color:#fff;min-width:0;overflow:hidden;white-space:nowrap;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.paybar span{padding:0 4px;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.paybar-piti{width:100%;background:linear-gradient(90deg,#e0506a,#c93f59)}
+.paybar-r1{background:var(--blue)}.paybar-r2{background:#5b8ef0}.paybar-r3{background:#8fb2f5;color:#16263d}.paybar-r4{background:#bcd2fa;color:#16263d}.paybar-gap{background:var(--s4);color:var(--txt2)}
+.paylegend{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+.paylegend span{font-size:9.5px;color:var(--txt2);display:flex;align-items:center;gap:5px}.paylegend i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.paysummary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding-top:14px;border-top:1px solid var(--b1)}
+.paysum-item .l{font-size:8.5px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em}.paysum-item .v{font-family:'DM Mono';font-weight:500;font-size:15px;margin-top:3px}
+.roomcards{display:grid;gap:9px}
+.roomrow{display:grid;grid-template-columns:1fr 120px;gap:9px;align-items:center;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:11px 13px}
+.roomrow .rn{font-size:12px;font-weight:600}.roomrow .rh{font-size:10px;color:var(--txt3);margin-top:2px}
+.cheat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cheat-item{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:12px 14px}
+.cheat-item .ci-t{font-size:12px;font-weight:600;margin-bottom:4px;color:var(--blue)}
+.cheat-item .ci-d{font-size:11px;color:var(--txt2);line-height:1.5}
+.score-key{display:flex;flex-direction:column;gap:7px}
+.sk-row{display:flex;align-items:center;gap:10px;font-size:11px}
+.sk-pill{font-family:'DM Mono';font-weight:500;font-size:11px;padding:2px 9px;border-radius:5px;min-width:42px;text-align:center}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(47,111,237,.2);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.statusmsg{font-size:11px;color:var(--txt2);margin-top:8px;min-height:16px;line-height:1.5}
+.err{color:var(--red)}.ok{color:var(--green)}
+.banner{font-size:10px;color:var(--txt3);text-align:center;margin-top:16px;line-height:1.5}
+.keynote{background:var(--blueg);border:1px solid var(--blueb);border-radius:var(--r);padding:11px 13px;font-size:10.5px;color:var(--txt2);line-height:1.5;margin-top:10px}
+.keynote b{color:var(--blue)}
+/* valuation */
+.valhero{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:6px}
+.valbig{font-family:'Syne';font-weight:800;font-size:38px;color:var(--blue);line-height:1}
+.valrange{font-family:'DM Mono';font-size:13px;color:var(--txt2);margin-top:6px}
+.valverd{padding:7px 14px;border-radius:9px;font-weight:700;font-size:13px}
+.valverd.under{background:var(--greeng);color:var(--green);border:1px solid var(--greenb)}
+.valverd.fair{background:var(--amberg);color:var(--amber);border:1px solid rgba(221,138,42,.3)}
+.valverd.over{background:var(--redg);color:var(--red);border:1px solid rgba(224,80,106,.3)}
+.valbar{position:relative;height:46px;margin:22px 0 10px}
+.valbar-track{position:absolute;top:18px;left:0;right:0;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--green),var(--amber),var(--red))}
+.valbar-mark{position:absolute;top:8px;width:3px;height:28px;background:var(--txt);border-radius:2px}
+.valbar-lbl{position:absolute;top:-4px;transform:translateX(-50%);font-family:'DM Mono';font-size:9px;color:var(--txt2);white-space:nowrap}
+.valbar-ends{display:flex;justify-content:space-between;font-family:'DM Mono';font-size:9px;color:var(--txt3);margin-top:2px}
+.conf-wrap{display:flex;align-items:center;gap:14px}
+.conf-ring{flex-shrink:0}
+.srcpill{display:inline-block;font-size:9px;padding:3px 9px;border-radius:20px;background:var(--tealg);color:var(--teal);border:1px solid rgba(19,160,168,.25);margin:2px 3px 2px 0;font-family:'DM Mono'}
+.empty-val{text-align:center;padding:30px 20px;color:var(--txt2)}
+.empty-val .ev-ic{font-size:30px;margin-bottom:10px}
+@media(max-width:560px){
+ .kpi-row{grid-template-columns:repeat(3,1fr)}
+ .strat-grid{grid-template-columns:repeat(2,1fr)}
+ .chgrid,.fgrid,.cheat-grid{grid-template-columns:1fr}
+ .seq3,.off3,.met3,.paysummary{grid-template-columns:1fr}
+ .cl{min-width:120px}
+ .valbig{font-size:30px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LANDING ===== -->
+<div class="screen on" id="scLanding">
+ <div class="hero">
+  <h1 class="heading" style="font-size:26px;color:var(--blue)">PropIQ</h1>
+  <div class="sub mut" style="font-size:13px;margin-top:5px">Multi-source real-estate investment analyzer — value any property, score it across four strategies, and model the deal in seconds.</div>
+  <div class="btn-row" style="margin-top:18px">
+   <button class="btn primary" onclick="go('scInput')">Analyze a Property →</button>
+   <button class="btn" onclick="go('scCheat')">How it works</button>
+  </div>
+ </div>
+ <div class="card cb">
+  <div class="ct">What makes this analysis strong</div>
+  <div class="note" style="font-size:12px;margin-top:0">With your own API key, PropIQ runs <b style="color:var(--blue)">live multi-source web research</b> — pulling list prices, sold comps, AVM estimates, and rent comps from across the public web, then reconciling them into a single defensible value range with a confidence score and the sources used. That feeds a <b>deterministic scoring engine</b> (same inputs → same score, every time) across House Hack, Buy &amp; Hold, BRRRR, and Fix &amp; Flip, plus full FHA payment math and 10-year projections.</div>
+ </div>
+ <div class="banner">Runs entirely in your browser. Your API key stays on your device and is sent only to Anthropic for the research step.</div>
+</div>
+
+<!-- ===== CHEAT SHEET ===== -->
+<div class="screen" id="scCheat">
+ <div class="hero"><div class="hrow"><div class="addr"><h1 class="heading" style="font-size:20px">Cheat Sheet</h1><div class="sub">Every input, every score — at a glance</div></div><button class="btn" onclick="go('scLanding')">← Back</button></div></div>
+ <div class="card"><div class="ct">How Valuation Works</div>
+  <div class="note" style="margin-top:0;font-size:12px">When you use AI auto-fill, Claude searches the web for the subject property and comparable sales, rentals, and AVM estimates. It adjusts comps for size, condition, beds/baths, and recency, then reconciles everything into a <b>point estimate + range</b>. The <b>confidence score</b> reflects how many quality comps it found and how tightly they agree. You always see the comps and sources, and you can override any number before scoring.</div>
+ </div>
+ <div class="card"><div class="ct">The Inputs</div>
+  <div class="cheat-grid">
+   <div class="cheat-item"><div class="ci-t">Price</div><div class="ci-d">Current asking price. The slider models offers −20% to +10%.</div></div>
+   <div class="cheat-item"><div class="ci-t">Est. Value (AI)</div><div class="ci-d">PropIQ's reconciled market value — compared to price for the over/under verdict.</div></div>
+   <div class="cheat-item"><div class="ci-t">Beds / Baths / SqFt / Year</div><div class="ci-d">Core facts. Beds sets how many rooms you can rent (you live in one).</div></div>
+   <div class="cheat-item"><div class="ci-t">Tax &amp; Insurance</div><div class="ci-d">Annual dollars; both roll into monthly PITI.</div></div>
+   <div class="cheat-item"><div class="ci-t">Whole-house &amp; Per-room Rent</div><div class="ci-d">Whole-house drives Buy &amp; Hold; per-room (auto-suggested, editable) drives House Hack.</div></div>
+   <div class="cheat-item"><div class="ci-t">Condition (0–100)</div><div class="ci-d">85+ renovated · 45–64 dated · &lt;25 major rehab. Drives risk &amp; rehab scoring.</div></div>
+   <div class="cheat-item"><div class="ci-t">Location / Appreciation / Vacancy</div><div class="ci-d">Demand strength, annual growth, expected vacancy.</div></div>
+   <div class="cheat-item"><div class="ci-t">ARV / Rehab / DOM</div><div class="ci-d">After-repair value, rehab budget, days on market — for BRRRR/flip &amp; market speed.</div></div>
+  </div>
+ </div>
+ <div class="card cb"><div class="ct">Reading the Scores</div>
+  <div class="score-key">
+   <div class="sk-row"><span class="sk-pill" style="background:var(--greeng);color:var(--green)">85–100</span><span>A+ · Strong Buy</span></div>
+   <div class="sk-row"><span class="sk-pill" style="background:var(--greeng);color:var(--green)">70–84</span><span>A · Buy</span></div>
+   <div class="sk-row"><span class="sk-pill" style="background:var(--amberg);color:var(--amber)">55–69</span><span>B · Watch / Negotiate</span></div>
+   <div class="sk-row"><span class="sk-pill" style="background:var(--amberg);color:var(--amber)">40–54</span><span>C · Caution</span></div>
+   <div class="sk-row"><span class="sk-pill" style="background:var(--redg);color:var(--red)">25–39</span><span>D · Pass</span></div>
+   <div class="sk-row"><span class="sk-pill" style="background:var(--redg);color:var(--red)">0–24</span><span>F · Hard Pass</span></div>
+  </div>
+  <div class="note"><b>Composite</b> blends a strategy-weighted score (House Hack 40%, Buy &amp; Hold 25%, BRRRR 20%, Flip 15%) with an overall Property score, then averages the two. House Hack leads because FHA 3.5%-down requires owner-occupancy.</div>
+ </div>
+ <div class="btn-row"><button class="btn primary" onclick="go('scInput')">Start an Analysis →</button></div>
+</div>
+
+<!-- ===== INPUT ===== -->
+<div class="screen" id="scInput">
+ <div class="hero"><div class="hrow"><div class="addr"><h1 class="heading" style="font-size:20px">New Analysis</h1><div class="sub">Research with AI, or enter manually</div></div><button class="btn" onclick="go('scLanding')">← Home</button></div></div>
+ <div class="card ct2"><div class="ct">⚡ AI Valuation &amp; Auto-fill</div>
+  <div class="note" style="margin-top:0">Paste an address and your Anthropic API key. PropIQ asks Claude to research the listing plus sold/rent comps across the web, reconcile a value, and fill everything below — including a full comps breakdown on the Valuation tab. Uses <b>your</b> key &amp; tokens only.</div>
+  <div class="f" style="margin-top:12px"><label>Property address</label><input type="text" id="inAddr" placeholder="3057 Oregon Ave S, Saint Louis Park, MN 55426"></div>
+  <div class="f"><label>Anthropic API key (sk-ant-…)</label><input type="password" id="inKey" placeholder="sk-ant-..."><div class="hint">Stored only in this browser. Get one at console.anthropic.com → API Keys.</div></div>
+  <div class="btn-row"><button class="btn green" id="btnAI" onclick="aiFill()">Research &amp; Auto-fill</button><button class="btn" onclick="saveKey()">Remember key on this device</button></div>
+  <div class="statusmsg" id="aiStatus"></div>
+  <div class="keynote"><b>If research fails with a network/CORS error:</b> some browsers block direct calls to Anthropic. Fill the fields manually — the analyzer and scoring work identically; you just won't get the auto comp table.</div>
+ </div>
+ <div class="card"><div class="ct">Property Inputs</div>
+  <div class="fgrid">
+   <div class="f"><label>Address / label</label><input type="text" id="fAddr" placeholder="123 Main St, City, ST"></div>
+   <div class="f"><label>List price ($)</label><input type="number" id="fPrice" value="385000"></div>
+   <div class="f"><label>Est. value — AI/AVM ($)</label><input type="number" id="fZest" value="388000"></div>
+   <div class="f"><label>Beds</label><input type="number" id="fBeds" value="4" oninput="suggestRooms()"></div>
+   <div class="f"><label>Baths</label><input type="number" id="fBaths" value="2"></div>
+   <div class="f"><label>Finished sqft</label><input type="number" id="fSqft" value="1480"></div>
+   <div class="f"><label>Year built</label><input type="number" id="fYr" value="1952"></div>
+   <div class="f"><label>Property tax ($/yr)</label><input type="number" id="fTax" value="4966"></div>
+   <div class="f"><label>Insurance ($/yr)</label><input type="number" id="fIns" value="1500"></div>
+   <div class="f"><label>Whole-house rent ($/mo)</label><input type="number" id="fRent" value="2700" oninput="suggestRooms()"></div>
+   <div class="f"><label>Appreciation (%/yr)</label><input type="number" id="fAppr" value="4" step="0.1"></div>
+   <div class="f"><label>Vacancy (%)</label><input type="number" id="fVac" value="6"></div>
+   <div class="f"><label>Condition (0–100)</label><input type="number" id="fCond" value="82"></div>
+   <div class="f"><label>Location</label><select id="fLoc"><option value="strong">Strong</option><option value="moderate">Moderate</option><option value="weak">Weak</option></select></div>
+   <div class="f"><label>ARV — after repair ($)</label><input type="number" id="fArv" value="400000"></div>
+   <div class="f"><label>Rehab budget ($)</label><input type="number" id="fRehab" value="4000"></div>
+   <div class="f"><label>Avg days on market</label><input type="number" id="fDom" value="7"></div>
+   <div class="f"><label>Reserves ($/mo)</label><input type="number" id="fReserves" value="250"></div>
+  </div>
+ </div>
+ <div class="card"><div class="ct">Per-Bedroom Rents <span style="color:var(--txt3);font-weight:400;text-transform:none;letter-spacing:0">(auto-suggested — override any)</span></div>
+  <div class="roomcards" id="roomInputs"></div>
+  <div class="note">The tool creates <b>(beds − 1)</b> room slots since you live in one. Suggestions split whole-house rent with a premium for the best room and a discount for below-grade space.</div>
+ </div>
+ <div class="btn-row"><button class="btn primary" onclick="runAnalysis()">Run Analysis →</button></div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="screen" id="scDash">
+ <div class="hero">
+  <div class="hrow">
+   <div class="addr"><h1 class="heading" id="dAddr">—</h1><div class="sub" id="dSub">—</div><div class="facts" id="dFacts"></div></div>
+   <div class="ring-wrap">
+    <svg width="92" height="92" viewBox="0 0 92 92">
+     <circle cx="46" cy="46" r="39" fill="none" stroke="var(--s4)" stroke-width="7"/>
+     <circle id="arc" cx="46" cy="46" r="39" fill="none" stroke="var(--amber)" stroke-width="7" stroke-dasharray="245" stroke-dashoffset="245" stroke-linecap="round" transform="rotate(-90 46 46)" style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .3s"/>
+     <text id="arcN" x="46" y="50" text-anchor="middle" font-family="Syne" font-weight="800" font-size="24" fill="#16263d">0</text>
+     <text x="46" y="63" text-anchor="middle" font-size="7" fill="#93a2b6" font-family="DM Mono" letter-spacing="1">/100</text>
+    </svg>
+    <div class="pills"><div class="pill grade" id="dGrade">—</div><div class="pill verd" id="dVerd">—</div></div>
+   </div>
+  </div>
+  <div class="strat-grid" id="dStrat"></div>
+ </div>
+ <div class="slider-card">
+  <div class="slider-top"><div><div class="label">Offer price — drag to model</div><div class="pl number" id="plOut">$0</div></div><div class="vs" id="vsBox">—</div></div>
+  <input type="range" id="slider" min="0" max="100" step="1000" value="0">
+  <div class="slider-scale"><span id="slMin">—</span><span id="slMid">list</span><span id="slMax">—</span></div>
+ </div>
+ <div class="kpi-row">
+  <div class="kpi kgold"><div class="label">Down 3.5%</div><div class="v" id="kDown">—</div></div>
+  <div class="kpi kneg"><div class="label">PITI</div><div class="v" id="kPiti">—</div></div>
+  <div class="kpi"><div class="label">Cash to Close</div><div class="v" id="kCtc">—</div></div>
+  <div class="kpi kpos"><div class="label">Room Inc</div><div class="v" id="kRoom">—</div></div>
+  <div class="kpi kamber"><div class="label">HH Net Cost</div><div class="v" id="kNet">—</div></div>
+  <div class="kpi kneg"><div class="label">Rental CF</div><div class="v" id="kCf">—</div></div>
+ </div>
+ <div class="hh-feat">
+  <div class="hh-circle"><div class="n" id="hhN">—</div><div class="l">HH Score</div></div>
+  <div class="hh-body"><div class="t">House Hack — your primary play (FHA owner-occupy)</div><div class="s">Live in 1 bedroom, rent the rest. Room income covers <span id="hhCov">—</span> of PITI.</div>
+   <div class="hh-stats"><div class="hh-stat"><div class="sl">Room Income</div><div class="sv" style="color:var(--green)" id="hhInc">—</div></div><div class="hh-stat"><div class="sl">Your PITI</div><div class="sv" style="color:var(--red)" id="hhPiti">—</div></div><div class="hh-stat"><div class="sl">Your Net Cost</div><div class="sv" style="color:var(--blue)" id="hhNet">—</div></div></div>
+  </div>
+ </div>
+ <div class="tabs">
+  <div class="tab on" data-p="ov">Overview</div>
+  <div class="tab" data-p="val">Valuation</div>
+  <div class="tab" data-p="sc">Scores</div>
+  <div class="tab" data-p="pi">PITI</div>
+  <div class="tab" data-p="hh">House Hack</div>
+  <div class="tab" data-p="ch">Charts</div>
+  <div class="tab" data-p="rd">Roadmap</div>
+ </div>
+
+ <div class="page on" id="ov">
+  <div class="chgrid">
+   <div class="card"><div class="ct">Strategy Radar</div><div class="ch h210"><canvas id="cRadar"></canvas></div></div>
+   <div class="card"><div class="ct">PITI Breakdown</div><div class="ch h210"><canvas id="cDonut"></canvas></div></div>
+  </div>
+  <div class="card"><div class="ct">10-Year Pure-Rental Cash Flow</div><div class="ch h200"><canvas id="cCf"></canvas></div><div class="note" id="ovNote"></div></div>
+  <div class="card cg"><div class="ct">Composite Formula</div><div class="formula" id="ovFormula"></div></div>
+ </div>
+
+ <!-- VALUATION TAB -->
+ <div class="page" id="val">
+  <div class="card cb"><div class="ct">PropIQ Estimated Value</div>
+   <div id="valContent"></div>
+  </div>
+  <div class="card" id="valVerdCard" style="display:none"><div class="ct">Price vs. Value Verdict</div><div id="valVerd"></div></div>
+  <div class="card" id="valConfCard" style="display:none"><div class="ct">Confidence</div><div id="valConf"></div></div>
+  <div class="card" id="valSalesCard" style="display:none"><div class="ct">Sale Comps (adjusted)</div><div style="overflow-x:auto"><table id="valSales"></table></div><div class="note" id="valSalesNote"></div></div>
+  <div class="card" id="valRoomCard" style="display:none"><div class="ct">Per-Room Rent — Reasoning &amp; Sources</div><div id="valRooms"></div></div>
+  <div class="card" id="valRentCard" style="display:none"><div class="ct">Rent Comps</div><div style="overflow-x:auto"><table id="valRent"></table></div></div>
+  <div class="card" id="valSrcCard" style="display:none"><div class="ct">Sources Consulted</div><div id="valSrc"></div></div>
+ </div>
+
+ <div class="page" id="sc"><div id="scoreCards"></div></div>
+
+ <div class="page" id="pi">
+  <div class="card"><div class="ct">Monthly Payment @ <span id="pitiPrice">—</span></div>
+   <div class="met3"><div class="met"><div class="l">Principal &amp; Interest</div><div class="v" id="mPi">—</div></div><div class="met"><div class="l">Monthly MIP</div><div class="v" id="mMip">—</div></div><div class="met"><div class="l">Property Tax</div><div class="v" id="mTax">—</div></div></div>
+   <div class="met3"><div class="met"><div class="l">Insurance</div><div class="v" id="mIns">—</div></div><div class="met"><div class="l">Total PITI</div><div class="v" style="color:var(--red)" id="mTot">—</div></div><div class="met"><div class="l">Loan Amount</div><div class="v" id="mLoan">—</div></div></div>
+  </div>
+  <div class="card cg"><div class="ct">Cash Needed at Closing</div>
+   <div class="met3"><div class="met"><div class="l">Down (3.5%)</div><div class="v" style="color:var(--gold)" id="cDownC">—</div></div><div class="met"><div class="l">Closing ~2.5%</div><div class="v" id="cClose">—</div></div><div class="met"><div class="l">Total Cash</div><div class="v" style="color:var(--gold)" id="cTotal">—</div></div></div>
+   <div class="note"><span class="tag ta">MIP for life of loan</span> FHA insurance won't auto-cancel — plan a refi to conventional near ~20% equity (≈yr 3–4). <span class="tag ta">Thin equity</span> At 96.5% LTV the cushion is small; a soft appraisal could need more cash.</div>
+  </div>
+  <div class="card"><div class="ct">FHA Assumptions (locked)</div><div class="formula" id="piAssume"></div></div>
+ </div>
+
+ <div class="page" id="hh">
+  <div class="card cb"><div class="ct">★ What You Pay vs. What Comes In</div>
+   <div class="payviz">
+    <div><div class="paylabel">You owe — PITI</div><div class="paybar-track"><div class="paybar paybar-piti" style="width:100%"><span id="vizPitiTxt">—</span></div></div></div>
+    <div><div class="paylabel">Rental income covers</div><div class="paybar-track" id="vizIncome"></div><div class="paylegend" id="vizLegend"></div></div>
+   </div>
+   <div class="paysummary"><div class="paysum-item"><div class="l">Income covers</div><div class="v" style="color:var(--green)" id="vizCovPct">—</div></div><div class="paysum-item"><div class="l">You cover (after reserves)</div><div class="v" style="color:var(--blue)" id="vizNetBig">—</div></div><div class="paysum-item"><div class="l">vs renting a 1-BR (~$1,595)</div><div class="v" style="color:var(--green)" id="vizSave">—</div></div></div>
+  </div>
+  <div class="card"><div class="ct">Per-Bedroom Rent Breakdown</div><div class="roomcards" id="hhRooms"></div><div class="note" id="hhRoomNote"></div></div>
+  <div class="card cb"><div class="ct">★ House Hack Math</div>
+   <div class="met3"><div class="met"><div class="l">Rentable Rooms</div><div class="v" style="color:var(--blue)" id="hRooms">—</div></div><div class="met"><div class="l">Room Income</div><div class="v" style="color:var(--green)" id="hRoom">—</div></div><div class="met"><div class="l">PITI Coverage</div><div class="v" id="hCov">—</div></div></div>
+   <div class="met3"><div class="met"><div class="l">Total PITI</div><div class="v" style="color:var(--red)" id="hPiti">—</div></div><div class="met"><div class="l">Reserves</div><div class="v" id="hRes">—</div></div><div class="met"><div class="l">Your Net Cost</div><div class="v" style="color:var(--blue)" id="hNet">—</div></div></div>
+  </div>
+ </div>
+
+ <div class="page" id="ch">
+  <div class="card"><div class="ct">Year-by-Year Cash Flow</div><div class="ch h230"><canvas id="cYoy"></canvas></div><div class="note">Yr 1 = house-hack net cost (blue). Yrs 2+ assume full rental after you move out.</div></div>
+  <div class="card"><div class="ct">Equity Build (10 yr)</div><div class="ch h230"><canvas id="cEq"></canvas></div></div>
+  <div class="card"><div class="ct">Strategy Scores</div><div class="ch h200"><canvas id="cBars"></canvas></div></div>
+ </div>
+
+ <div class="page" id="rd">
+  <div class="card"><div class="ct">10-Year Wealth Build</div><div class="ch h230"><canvas id="cWealth"></canvas></div></div>
+  <div class="card"><div class="ct">Acquisition Sequence</div>
+   <div class="seq3"><div class="seq"><div class="seqg">1</div><div class="sh" style="color:var(--blue)">This Home</div><div class="sd">FHA 3.5% house hack. Live in one bedroom, rent the rest. Refi out of MIP ~yr 3.</div></div><div class="seq"><div class="seqg">2</div><div class="sh" style="color:var(--gold)">Rental — Yr 2</div><div class="sd">Tap equity/savings for a pure buy-hold once you've moved on.</div></div><div class="seq"><div class="seqg">3</div><div class="sh" style="color:var(--green)">BRRRR — Yr 3</div><div class="sd">Use a value-add property to recycle equity into the next deal.</div></div></div>
+  </div>
+  <div class="card"><div class="ct">10-Year Projection</div><table><thead><tr><th>Year</th><th>Value</th><th>Equity</th><th>Monthly CF</th></tr></thead><tbody id="projBody"></tbody></table></div>
+  <div class="card"><div class="ct">Offer Strategy</div>
+   <div class="off3"><div class="ot"><div class="l">Open</div><div class="v" style="color:var(--amber)" id="oOpen">—</div></div><div class="ot ott"><div class="l">Target</div><div class="v" style="color:var(--green)" id="oTarget">—</div></div><div class="ot"><div class="l">Walk Away</div><div class="v" style="color:var(--red)" id="oWalk">—</div></div></div>
+   <div class="note">Open ≈ 7% under list, walk-away ≈ 3.5% over. Target is your slider price.</div>
+  </div>
+ </div>
+ <div class="btn-row" style="margin-top:6px"><button class="btn" onclick="go('scInput')">← Edit inputs</button><button class="btn" onclick="go('scLanding')">New property</button></div>
+</div>
+
+<script>
+// ============ PropIQ app ============
+function go(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
+var $=function(id){return document.getElementById(id);};
+var money=function(v){return '$'+Math.round(v).toLocaleString();};
+function scH(s){return s>=70?'var(--green)':s>=55?'var(--amber)':'var(--red)';}
+function gradeOf(s){return s>=85?['A+','Strong Buy']:s>=70?['A','Buy']:s>=55?['B','Watch / Negotiate']:s>=40?['C','Caution']:s>=25?['D','Pass']:['F','Hard Pass'];}
+function num(id){return parseFloat($(id).value)||0;}
+
+// AI valuation payload (filled by aiFill, used by Valuation tab)
+var VAL=null;
+
+// key persistence
+try{var sk=localStorage.getItem('propiq_key'); if(sk)$('inKey').value=sk;}catch(e){}
+function saveKey(){try{localStorage.setItem('propiq_key',$('inKey').value.trim());$('aiStatus').innerHTML='<span class="ok">Key saved on this device.</span>';}catch(e){$('aiStatus').innerHTML='<span class="err">Could not save (private mode?).</span>';}}
+
+// per-room suggestion
+function suggestRooms(){
+ var beds=Math.max(1,Math.round(num('fBeds')));
+ var rentable=Math.max(0,beds-1);
+ var rent=num('fRent');
+ var wrap=$('roomInputs'); wrap.innerHTML='';
+ var weights=[];for(var i=0;i<rentable;i++)weights.push(1);
+ if(rentable>=1)weights[0]=1.18;
+ if(rentable>=2)weights[rentable-1]=0.90;
+ var wsum=weights.reduce(function(a,b){return a+b;},0)||1;
+ var byRoomTotal=rent*0.92;
+ for(var i=0;i<rentable;i++){
+  var sug=Math.round(byRoomTotal*weights[i]/wsum/25)*25;
+  var nm=rentable===1?'Room 1':(i===0?'Room 1 (best / private bath)':i===rentable-1?'Room '+(i+1)+' (basement / smallest)':'Room '+(i+1));
+  var hint=i===0?'Top room — private bath or largest':(i===rentable-1?'Below-grade or smallest — discounted':'Standard bedroom');
+  var row=document.createElement('div');row.className='roomrow';
+  row.innerHTML='<div><div class="rn">'+nm+'</div><div class="rh">'+hint+'</div></div><input type="number" class="roomRent" value="'+sug+'">';
+  wrap.appendChild(row);
+ }
+}
+suggestRooms();
+
+var D={};
+function gather(){
+ var rooms=[];document.querySelectorAll('.roomRent').forEach(function(r){rooms.push(parseFloat(r.value)||0);});
+ D={addr:$('fAddr').value||'Property',price:num('fPrice'),zest:num('fZest'),beds:Math.round(num('fBeds')),baths:num('fBaths'),
+  sqft:num('fSqft'),yr:Math.round(num('fYr')),tax:num('fTax'),ins:num('fIns'),rent:num('fRent'),appr:num('fAppr'),
+  vac:num('fVac'),cond:num('fCond'),loc:$('fLoc').value,arv:num('fArv'),rehab:num('fRehab'),dom:Math.round(num('fDom')),
+  reserves:num('fReserves'),rooms:rooms};
+}
+
+function fha(p){var dn=p*0.035,base=p-dn,mipUp=base*0.0175,loan=base+mipUp;var r=0.0685/12,n=360;var pi=loan*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);var mM=loan*0.0055/12,tM=D.tax/12,iM=D.ins/12;return{dn:dn,loan:loan,pi:pi,mM:mM,tM:tM,iM:iM,tot:pi+mM+tM+iM,ctc:dn+p*0.025};}
+
+function scoreAll(p){
+ var f=fha(p);
+ var roomInc=D.rooms.reduce(function(a,b){return a+b;},0);
+ var cov=roomInc/f.tot*100, netCost=f.tot-roomInc-D.reserves;
+ var grossEff=D.rent*(1-D.vac/100);
+ var NOI=grossEff-D.rent*0.10-f.tM-f.iM;
+ var CF=NOI-f.pi-f.mM;
+ var capRate=NOI*12/p, CoC=CF*12/f.ctc, DSCR=grossEff/f.tot;
+ var hh=0;
+ hh+=cov>=95?30:cov>=85?26:cov>=75?22:cov>=65?17:cov>=55?12:7;
+ hh+=netCost<=0?25:netCost<=200?22:netCost<=400?18:netCost<=700?14:netCost<=1000?9:5;
+ hh+=D.loc==='strong'?15:D.loc==='moderate'?11:6;
+ hh+=D.appr>=5?15:D.appr>=3?12:D.appr>=2?9:D.appr>=1?5:2;
+ hh+=D.cond>=75?15:D.cond>=50?11:6;
+ hh+=(D.cond/100)*15;
+ var hhT=Math.round(hh/115*100);
+ var bh=0;
+ bh+=CF>300?25:CF>=150?20:CF>=0?15:CF>=-100?8:3;
+ bh+=capRate>0.08?15:capRate>=0.06?12:capRate>=0.04?9:capRate>=0.02?5:2;
+ bh+=CoC>0.12?15:CoC>=0.08?12:CoC>=0.05?9:CoC>=0.02?5:2;
+ bh+=D.appr>5?15:D.appr>=3?12:D.appr>=2?9:D.appr>=1?5:2;
+ bh+=DSCR>1.5?10:DSCR>=1.25?8:DSCR>=1.0?5:2;
+ bh+=D.loc==='strong'?10:D.loc==='moderate'?7:3;
+ bh+=D.cond>=75?10:D.cond>=50?7:3;
+ var allIn=p+f.ctc+D.rehab;
+ var eqC=(D.arv-allIn)/D.arv;
+ var cashLeft=allIn-D.arv*0.75;
+ var rR=0.065/12, loanR=D.arv*0.75, piR=loanR*(rR*Math.pow(1+rR,360))/(Math.pow(1+rR,360)-1);
+ var cfPost=D.rent*(1-D.vac/100)-D.rent*0.10-D.tax/12-D.ins/12-piR;
+ var MAO=D.arv*0.70-D.rehab, over=(p-MAO)/MAO;
+ var br=0;
+ br+=eqC>0.30?25:eqC>=0.20?20:eqC>=0.10?15:eqC>=0.05?8:3;
+ br+=cashLeft<=0?20:cashLeft<10000?16:cashLeft<25000?12:cashLeft<50000?8:4;
+ br+=cfPost>300?20:cfPost>=150?16:cfPost>=0?12:cfPost>=-100?6:2;
+ br+=15;br+=D.rehab<=15000?10:D.rehab<=40000?7:3;
+ br+=over<=0?10:over<=0.05?7:over<=0.10?4:1;
+ var profit=(D.arv-allIn-D.arv*0.06)/D.arv;
+ var fl=0;
+ fl+=profit>0.15?25:profit>=0.12?20:profit>=0.10?15:profit>=0.07?10:3;
+ fl+=over<=0?20:over<=0.02?15:over<=0.05?10:over<=0.10?5:2;
+ fl+=15;fl+=D.rehab<=15000?15:D.rehab<=40000?10:5;
+ fl+=D.dom<14?15:D.dom<30?12:D.dom<60?8:D.dom<90?5:2;
+ fl+=6;
+ var rt=bh;
+ function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+ var vc=clamp(50+(D.zest-p)/D.zest*180,30,85);
+ var ip=clamp(40+capRate*500+(CF>0?12:CF>-200?4:0),30,80);
+ var nb=D.loc==='strong'?74:D.loc==='moderate'?62:48;
+ var iu=clamp(55+D.appr/100*350+(D.rehab>8000?12:D.rehab>3000?6:0),30,85);
+ var mc=D.dom<14?72:D.dom<30?65:D.dom<60?58:50;
+ var prop=Math.round(vc*0.25+ip*0.20+nb*0.20+iu*0.20+mc*0.15);
+ var hhW=hhT*0.40+bh*0.25+br*0.20+fl*0.15;
+ var comp=Math.round((hhW+prop)/2);
+ return {f:f,roomInc:roomInc,cov:cov,netCost:netCost,CF:CF,capRate:capRate,CoC:CoC,DSCR:DSCR,
+  hh:hhT,bh:bh,br:br,fl:fl,rt:rt,prop:prop,comp:comp,hhW:hhW,
+  hhParts:{cov:cov>=95?30:cov>=85?26:cov>=75?22:cov>=65?17:cov>=55?12:7,net:netCost<=0?25:netCost<=200?22:netCost<=400?18:netCost<=700?14:netCost<=1000?9:5},
+  eqC:eqC,cashLeft:cashLeft,cfPost:cfPost,over:over,profit:profit,allIn:allIn};
+}
+
+Chart.defaults.color='#5a6b82';Chart.defaults.borderColor='rgba(18,38,63,.07)';Chart.defaults.font.family="'DM Mono',monospace";Chart.defaults.font.size=10;
+var CX={grid:'rgba(18,38,63,.07)',txt:'#5a6b82',g:'#1ba974',ga:'rgba(27,169,116,.14)',r:'#e0506a',ra:'rgba(224,80,106,.12)',gold:'#c9881f',golda:'rgba(201,136,31,.14)',b:'#2f6fed',ba:'rgba(47,111,237,.14)',amb:'#dd8a2a',amba:'rgba(221,138,42,.12)'};
+var CH={};
+function dC(id){if(CH[id]){try{CH[id].destroy();}catch(e){}delete CH[id];}}
+
+var curP=0;
+function render(p){
+ var S=scoreAll(p), f=S.f;
+ $('dAddr').textContent=D.addr;
+ $('dSub').textContent='FHA house-hack analysis · '+D.beds+'bd / '+D.baths+'ba';
+ $('dFacts').innerHTML='<div class="fact"><b>'+D.beds+'</b> bd</div><div class="fact"><b>'+D.baths+'</b> ba</div><div class="fact"><b>'+D.sqft.toLocaleString()+'</b> sqft</div><div class="fact">built <b>'+D.yr+'</b></div><div class="fact"><b>'+D.dom+'</b> DOM</div>';
+ var g=gradeOf(S.comp);
+ $('arcN').textContent=S.comp;$('dGrade').textContent='Grade '+g[0];$('dVerd').textContent=g[1];
+ var arc=$('arc');arc.setAttribute('stroke',scH(S.comp));setTimeout(function(){arc.style.strokeDashoffset=(245-(245*S.comp/100)).toFixed(0);},80);
+ var strats=[['★ House Hack',S.hh,true],['Buy & Hold',S.bh,false],['BRRRR',S.br,false],['Fix & Flip',S.fl,false]];
+ $('dStrat').innerHTML=strats.map(function(x){var gg=gradeOf(x[1]);var col=scH(x[1]);return '<div class="strat'+(x[2]?' primary':'')+'"><div class="nm">'+x[0]+'</div><div class="vv" style="color:'+(x[2]?'var(--blue)':col)+'">'+x[1]+'</div><div class="gd" style="color:'+col+'">'+gg[0]+' · '+gg[1].split(' ')[0]+'</div></div>';}).join('');
+ $('kDown').textContent=money(f.dn);$('kPiti').textContent=money(f.tot);$('kCtc').textContent=money(f.ctc);
+ $('kRoom').textContent=money(S.roomInc);$('kNet').textContent=money(Math.max(0,S.netCost));
+ $('kCf').textContent=(S.CF<0?'-$':'$')+Math.round(Math.abs(S.CF)).toLocaleString();
+ $('hhN').textContent=S.hh;$('hhCov').textContent=Math.round(S.cov)+'%';
+ $('hhInc').textContent=money(S.roomInc)+'/mo';$('hhPiti').textContent=money(f.tot)+'/mo';$('hhNet').textContent=money(Math.max(0,S.netCost))+'/mo';
+ $('plOut').textContent=money(p);
+ var dpct=(p-D.zest)/D.zest*100;
+ $('vsBox').innerHTML='List '+money(D.price)+'<br>'+(Math.abs(dpct)<0.6?'~at est. value':(dpct>=0?'+':'')+dpct.toFixed(1)+'% '+(dpct>=0?'over':'under')+' est. value');
+ $('pitiPrice').textContent=money(p);
+ $('mPi').textContent=money(f.pi);$('mMip').textContent=money(f.mM);$('mTax').textContent=money(f.tM);
+ $('mIns').textContent=money(f.iM);$('mTot').textContent=money(f.tot);$('mLoan').textContent=money(f.loan);
+ $('cDownC').textContent=money(f.dn);$('cClose').textContent=money(p*0.025);$('cTotal').textContent=money(f.ctc);
+ $('piAssume').innerHTML='Rate <b>6.85%</b> 30-yr · Down <b>3.5%</b> · Upfront MIP <b>1.75%</b> financed<br>Annual MIP <b>0.55%</b> · Closing <b>2.5%</b> · Tax <b>'+money(D.tax)+'/yr</b> · Ins <b>'+money(D.ins)+'/yr</b>';
+ $('hRooms').textContent=D.rooms.length;$('hRoom').textContent=money(S.roomInc)+'/mo';$('hCov').textContent=Math.round(S.cov)+'%';
+ $('hPiti').textContent=money(f.tot)+'/mo';$('hRes').textContent=money(D.reserves)+'/mo';$('hNet').textContent=money(Math.max(0,S.netCost))+'/mo';
+ $('vizPitiTxt').textContent=money(f.tot);
+ var inc=$('vizIncome');inc.innerHTML='';
+ var pal=['paybar-r1','paybar-r2','paybar-r3','paybar-r4'];
+ D.rooms.forEach(function(rr,i){var w=rr/f.tot*100;var d=document.createElement('div');d.className='paybar '+pal[i%4];d.style.width=w+'%';d.innerHTML='<span>'+money(rr)+'</span>';inc.appendChild(d);});
+ var gapPct=Math.max(0,(f.tot-S.roomInc)/f.tot*100);
+ var gd=document.createElement('div');gd.className='paybar paybar-gap';gd.style.width=gapPct+'%';gd.innerHTML='<span>'+money(Math.max(0,f.tot-S.roomInc))+'</span>';inc.appendChild(gd);
+ var leg=['Best room','Room 2','Room 3','Room 4'];
+ var legHtml='';D.rooms.forEach(function(rr,i){legHtml+='<span><i style="background:'+['var(--blue)','#5b8ef0','#8fb2f5','#bcd2fa'][i%4]+'"></i>'+(leg[i]||('Room '+(i+1)))+'</span>';});
+ legHtml+='<span><i style="background:var(--s4)"></i>Your share + reserves</span>';
+ $('vizLegend').innerHTML=legHtml;
+ $('vizCovPct').textContent=Math.round(S.cov)+'%';$('vizNetBig').textContent=money(Math.max(0,S.netCost))+'/mo';
+ $('vizSave').textContent='save ~'+money(Math.max(0,1595-Math.max(0,S.netCost)))+'/mo';
+ var hr=$('hhRooms');hr.innerHTML='';
+ D.rooms.forEach(function(rr,i){var nm=i===0?'Room 1 — best / private bath likely':i===D.rooms.length-1&&D.rooms.length>1?'Room '+(i+1)+' — basement / smallest':'Room '+(i+1)+' — standard';var row=document.createElement('div');row.className='roomrow';row.innerHTML='<div><div class="rn">'+nm+'</div></div><div class="number" style="text-align:right;color:var(--green);font-size:16px">'+money(rr)+'</div>';hr.appendChild(row);});
+ $('hhRoomNote').innerHTML='You rent '+D.rooms.length+' bedroom'+(D.rooms.length>1?'s':'')+' and live in the remaining one. Total <b>'+money(S.roomInc)+'/mo</b> against a '+money(f.tot)+' payment.';
+ $('ovNote').innerHTML='As a straight rental this '+(S.CF<0?'runs negative':'cash-flows')+' — whole-house rent ('+money(D.rent)+') vs a '+money(f.tot)+' PITI. House hack first; convert to rental after refinancing out of FHA MIP.';
+ $('ovFormula').innerHTML='hhWeighted = HH·40% + BH·25% + BRRRR·20% + Flip·15%<br>= '+S.hh+'·.40 + '+S.bh+'·.25 + '+S.br+'·.20 + '+S.fl+'·.15 = <b>'+S.hhW.toFixed(1)+'</b><br>composite = (hhWeighted + property '+S.prop+')/2 = <b>'+S.comp+'</b> → Grade '+g[0];
+ renderScoreCards(S,f);
+ renderValuation(p,S);
+ $('oOpen').textContent=money(Math.round(D.price*0.931/1000)*1000);
+ $('oTarget').textContent=money(p);
+ $('oWalk').textContent=money(Math.round(D.price*1.035/1000)*1000);
+ buildCharts(p,f,S);buildProj(p,f);
+}
+
+// ===== VALUATION TAB =====
+function renderValuation(p,S){
+ var c=$('valContent');
+ if(!VAL){
+  c.innerHTML='<div class="empty-val"><div class="ev-ic">📊</div><div style="font-weight:600;margin-bottom:6px">No AI valuation yet</div><div style="font-size:11px;line-height:1.6">Use <b>Research &amp; Auto-fill</b> on the input screen (with your API key) to generate a multi-source value estimate, comps, and confidence here. Your manually-entered est. value of <b>'+money(D.zest)+'</b> is being used for scoring in the meantime.</div></div>';
+  ['valVerdCard','valConfCard','valSalesCard','valRoomCard','valRentCard','valSrcCard'].forEach(function(id){$(id).style.display='none';});
+  return;
+ }
+ var v=VAL;
+ var lo=v.valueLow||Math.round(v.value*0.95), hi=v.valueHigh||Math.round(v.value*1.05);
+ c.innerHTML='<div class="valhero"><div><div class="valbig">'+money(v.value)+'</div><div class="valrange">range '+money(lo)+' – '+money(hi)+'</div></div></div>';
+ // verdict
+ $('valVerdCard').style.display='';
+ var diff=(p-v.value)/v.value*100;
+ var vclass=diff<=-3?'under':diff>=3?'over':'fair';
+ var vlabel=diff<=-3?'Priced BELOW value — potential deal':diff>=3?'Priced ABOVE value — negotiate':'Priced FAIRLY — at market';
+ var spanLo=Math.min(lo,p)*0.985, spanHi=Math.max(hi,p)*1.015;
+ function pos(x){return Math.max(2,Math.min(98,(x-spanLo)/(spanHi-spanLo)*100));}
+ $('valVerd').innerHTML='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span class="valverd '+vclass+'">'+vlabel+'</span><span class="mut" style="font-size:11px">List '+money(p)+' is '+(diff>=0?'+':'')+diff.toFixed(1)+'% vs est. value</span></div>'+
+  '<div class="valbar"><div class="valbar-track"></div>'+
+  '<div class="valbar-mark" style="left:'+pos(v.value)+'%;background:var(--blue)"></div><div class="valbar-lbl" style="left:'+pos(v.value)+'%;color:var(--blue)">Value '+money(v.value)+'</div>'+
+  '<div class="valbar-mark" style="left:'+pos(p)+'%;background:var(--txt)"></div><div class="valbar-lbl" style="left:'+pos(p)+'%;top:32px">List '+money(p)+'</div>'+
+  '</div><div class="valbar-ends"><span>'+money(spanLo)+'</span><span>'+money(spanHi)+'</span></div>';
+ // confidence
+ $('valConfCard').style.display='';
+ var cf=v.confidence||60;
+ var ccol=cf>=75?'var(--green)':cf>=50?'var(--amber)':'var(--red)';
+ var dash=2*Math.PI*26;
+ $('valConf').innerHTML='<div class="conf-wrap"><svg class="conf-ring" width="70" height="70" viewBox="0 0 70 70"><circle cx="35" cy="35" r="26" fill="none" stroke="var(--s4)" stroke-width="6"/><circle cx="35" cy="35" r="26" fill="none" stroke="'+ccol+'" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+dash+'" stroke-dashoffset="'+(dash-dash*cf/100)+'" transform="rotate(-90 35 35)"/><text x="35" y="40" text-anchor="middle" font-family="DM Mono" font-weight="500" font-size="16" fill="'+ccol+'">'+cf+'</text></svg><div style="flex:1;font-size:11px;color:var(--txt2);line-height:1.55">'+(v.confidenceReason||'Based on the number and quality of comparable sales found and how tightly they cluster.')+'</div></div>';
+ // sale comps
+ if(v.saleComps&&v.saleComps.length){
+  $('valSalesCard').style.display='';
+  var rows='<thead><tr><th>Address</th><th>Sold</th><th>Beds</th><th>SqFt</th><th>$/sqft</th><th>Adj. value</th></tr></thead><tbody>';
+  v.saleComps.forEach(function(co){rows+='<tr><td>'+(co.address||'comp')+'</td><td>'+(co.soldPrice?money(co.soldPrice):'—')+'</td><td>'+(co.beds||'—')+'</td><td>'+(co.sqft?co.sqft.toLocaleString():'—')+'</td><td>'+(co.ppsf?'$'+co.ppsf:'—')+'</td><td style="color:var(--blue)">'+(co.adjusted?money(co.adjusted):'—')+'</td></tr>';});
+  rows+='</tbody>';
+  $('valSales').innerHTML=rows;
+  $('valSalesNote').innerHTML=v.compNote||'Comps adjusted for size, condition, and recency, then reconciled to the estimate above.';
+ } else $('valSalesCard').style.display='none';
+ // per-room reasoning
+ if(v.roomRents&&v.roomRents.length){
+  $('valRoomCard').style.display='';
+  var rh='';
+  v.roomRents.forEach(function(rm){rh+='<div class="roomrow" style="grid-template-columns:1fr 90px;align-items:start"><div><div class="rn">'+(rm.name||'Room')+'</div><div class="rh" style="margin-top:4px;line-height:1.5">'+(rm.why||'')+'</div></div><div class="number" style="text-align:right;color:var(--green);font-size:16px">'+money(rm.rent||0)+'</div></div>';});
+  $('valRooms').innerHTML='<div class="roomcards">'+rh+'</div>';
+ } else $('valRoomCard').style.display='none';
+ // rent comps
+ if(v.rentComps&&v.rentComps.length){
+  $('valRentCard').style.display='';
+  var rr='<thead><tr><th>Address / source</th><th>Beds</th><th>Rent/mo</th></tr></thead><tbody>';
+  v.rentComps.forEach(function(rc){rr+='<tr><td>'+(rc.address||'comp')+'</td><td>'+(rc.beds||'—')+'</td><td style="color:var(--green)">'+(rc.rent?money(rc.rent):'—')+'</td></tr>';});
+  rr+='</tbody>';$('valRent').innerHTML=rr;
+ } else $('valRentCard').style.display='none';
+ // sources
+ if(v.sources&&v.sources.length){
+  $('valSrcCard').style.display='';
+  $('valSrc').innerHTML=v.sources.map(function(s){return '<span class="srcpill">'+s+'</span>';}).join('');
+ } else $('valSrcCard').style.display='none';
+}
+
+function bar(label,val,max){var fr=val/max;var col=fr>=0.7?'var(--green)':fr>=0.45?'var(--amber)':'var(--red)';return '<div class="crit"><div class="cl">'+label+'</div><div class="cb2"><div class="cf2" style="width:'+(fr*100)+'%;background:'+col+'"></div></div><div class="cp">'+val+'/'+max+'</div></div>';}
+function renderScoreCards(S,f){
+ var html='';
+ html+='<div class="card cb"><div class="ct">★ House Hack — '+S.hh+'/100</div>'+
+  bar('PITI coverage ('+Math.round(S.cov)+'%)',S.hhParts.cov,30)+
+  bar('Net owner cost ('+money(Math.max(0,S.netCost))+')',S.hhParts.net,25)+
+  bar('Location ('+D.loc+')',D.loc==='strong'?15:D.loc==='moderate'?11:6,15)+
+  bar('Appreciation ('+D.appr+'%)',D.appr>=5?15:D.appr>=3?12:D.appr>=2?9:D.appr>=1?5:2,15)+
+  bar('Risk buffer (cond '+D.cond+')',D.cond>=75?15:D.cond>=50?11:6,15)+
+  bar('Condition (photos)',Math.round(D.cond/100*15),15)+'</div>';
+ html+='<div class="card"><div class="ct">Buy & Hold — '+S.bh+'/100</div>'+
+  bar('Cash flow ('+(S.CF<0?'-$':'$')+Math.round(Math.abs(S.CF))+')',S.CF>300?25:S.CF>=150?20:S.CF>=0?15:S.CF>=-100?8:3,25)+
+  bar('Cap rate ('+(S.capRate*100).toFixed(1)+'%)',S.capRate>0.08?15:S.capRate>=0.06?12:S.capRate>=0.04?9:S.capRate>=0.02?5:2,15)+
+  bar('Cash-on-cash ('+(S.CoC*100).toFixed(0)+'%)',S.CoC>0.12?15:S.CoC>=0.08?12:S.CoC>=0.05?9:S.CoC>=0.02?5:2,15)+
+  bar('Appreciation ('+D.appr+'%)',D.appr>5?15:D.appr>=3?12:D.appr>=2?9:D.appr>=1?5:2,15)+
+  bar('DSCR ('+S.DSCR.toFixed(2)+')',S.DSCR>1.5?10:S.DSCR>=1.25?8:S.DSCR>=1.0?5:2,10)+
+  bar('Location ('+D.loc+')',D.loc==='strong'?10:D.loc==='moderate'?7:3,10)+
+  bar('Risk buffer (cond '+D.cond+')',D.cond>=75?10:D.cond>=50?7:3,10)+'</div>';
+ html+='<div class="card"><div class="ct">BRRRR — '+S.br+'/100</div>'+
+  bar('Equity created ('+(S.eqC*100).toFixed(0)+'%)',S.eqC>0.30?25:S.eqC>=0.20?20:S.eqC>=0.10?15:S.eqC>=0.05?8:3,25)+
+  bar('Cash left ('+money(S.cashLeft)+')',S.cashLeft<=0?20:S.cashLeft<10000?16:S.cashLeft<25000?12:S.cashLeft<50000?8:4,20)+
+  bar('Post-refi CF ('+(S.cfPost<0?'-$':'$')+Math.round(Math.abs(S.cfPost))+')',S.cfPost>300?20:S.cfPost>=150?16:S.cfPost>=0?12:S.cfPost>=-100?6:2,20)+
+  bar('ARV confidence',15,15)+
+  bar('Rehab feasibility',D.rehab<=15000?10:D.rehab<=40000?7:3,10)+
+  bar('70% rule',S.over<=0?10:S.over<=0.05?7:S.over<=0.10?4:1,10)+'</div>';
+ html+='<div class="card"><div class="ct">Fix & Flip — '+S.fl+'/100</div>'+
+  bar('Profit margin ('+(S.profit*100).toFixed(0)+'%)',S.profit>0.15?25:S.profit>=0.12?20:S.profit>=0.10?15:S.profit>=0.07?10:3,25)+
+  bar('70% rule',S.over<=0?20:S.over<=0.02?15:S.over<=0.05?10:S.over<=0.10?5:2,20)+
+  bar('ARV confidence',15,15)+
+  bar('Rehab scope',D.rehab<=15000?15:D.rehab<=40000?10:5,15)+
+  bar('Market speed ('+D.dom+' DOM)',D.dom<14?15:D.dom<30?12:D.dom<60?8:D.dom<90?5:2,15)+
+  bar('Exit risk',6,10)+'</div>';
+ $('scoreCards').innerHTML=html;
+}
+
+function buildCharts(p,f,S){
+ var rent=D.rent,vac=D.vac/100,appr=D.appr/100;
+ dC('radar');CH.radar=new Chart($('cRadar'),{type:'radar',data:{labels:['House Hack','Buy & Hold','BRRRR','Fix & Flip','Rental'],datasets:[{data:[S.hh,S.bh,S.br,S.fl,S.rt],backgroundColor:CX.ba,borderColor:CX.b,borderWidth:1.5,pointBackgroundColor:CX.b,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:100,ticks:{stepSize:25,backdropColor:'transparent',color:CX.txt},grid:{color:CX.grid},pointLabels:{color:CX.txt,font:{size:9,family:"'DM Sans',sans-serif"}}}},plugins:{legend:{display:false}}}});
+ dC('donut');CH.donut=new Chart($('cDonut'),{type:'doughnut',data:{labels:['P&I','MIP','Tax','Insurance'],datasets:[{data:[Math.round(f.pi),Math.round(f.mM),Math.round(f.tM),Math.round(f.iM)],backgroundColor:[CX.r,CX.amb,CX.gold,CX.b],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{padding:8,font:{size:9}}},tooltip:{callbacks:{label:function(c){return c.label+': $'+Math.round(c.parsed)+'/mo';}}}}}});
+ var vals=Array.from({length:10},function(_,i){var rg=rent*Math.pow(1.03,i);return Math.round(rg*(1-vac)-rg*0.10-f.pi-(i<3?f.mM:0)-f.tM-f.iM);});
+ dC('cf');CH.cf=new Chart($('cCf'),{type:'line',data:{labels:['Yr1','Yr2','Yr3','Yr4','Yr5','Yr6','Yr7','Yr8','Yr9','Yr10'],datasets:[{label:'CF',data:vals,borderColor:CX.g,backgroundColor:CX.ga,fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:vals.map(function(v){return v>=0?CX.g:CX.r;}),segment:{borderColor:function(ctx){return ctx.p1.parsed.y>=0?CX.g:CX.r;}}},{label:'Zero',data:Array(10).fill(0),borderColor:'rgba(18,38,63,.12)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return (c.parsed.y>=0?'+':'')+'$'+Math.round(Math.abs(c.parsed.y))+'/mo';}}}},scales:{y:{ticks:{callback:function(v){return (v<0?'-$':'$')+Math.abs(v).toLocaleString();}},grid:{color:CX.grid}},x:{grid:{display:false}}}}});
+ var hhCost=Math.max(0,Math.round(f.tot-S.roomInc-D.reserves));
+ var yoy=[-hhCost].concat(Array.from({length:9},function(_,i){var rg=rent*Math.pow(1.03,i);return Math.round(rg*(1-vac)-rg*0.10-f.pi-(i<3?f.mM:0)-f.tM-f.iM);}));
+ dC('yoy');CH.yoy=new Chart($('cYoy'),{type:'bar',data:{labels:['Yr1 (HH)','Yr2','Yr3','Yr4 (Refi)','Yr5','Yr6','Yr7','Yr8','Yr9','Yr10'],datasets:[{data:yoy,backgroundColor:yoy.map(function(v,i){return i===0?CX.ba:v>=0?CX.ga:CX.ra;}),borderColor:yoy.map(function(v,i){return i===0?CX.b:v>=0?CX.g:CX.r;}),borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return (c.parsed.y>=0?'+':'')+'$'+Math.round(Math.abs(c.parsed.y))+'/mo';}}}},scales:{y:{ticks:{callback:function(v){return (v<0?'-$':'$')+Math.abs(v).toLocaleString();}},grid:{color:CX.grid}},x:{ticks:{font:{size:9}},grid:{display:false}}}}});
+ var yrs=Array.from({length:10},function(_,i){return i+1;});
+ var pv=yrs.map(function(y){return Math.round(p*Math.pow(1+appr,y));});
+ var eqs=yrs.map(function(y){var bal=f.loan;for(var m=0;m<y*12;m++){var int=bal*0.0685/12;bal-=(f.pi-int);}return Math.round(pv[y-1]-Math.max(0,bal));});
+ dC('eq');CH.eq=new Chart($('cEq'),{type:'line',data:{labels:yrs.map(function(y){return 'Yr'+y;}),datasets:[{label:'Property Value',data:pv,borderColor:CX.gold,backgroundColor:CX.golda,fill:true,tension:0.3,pointRadius:2},{label:'Your Equity',data:eqs,borderColor:CX.g,backgroundColor:'transparent',borderWidth:2,tension:0.3,pointRadius:2,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{padding:8,font:{size:9}}}},scales:{y:{ticks:{callback:function(v){return '$'+(v/1000).toFixed(0)+'k';}},grid:{color:CX.grid}},x:{grid:{display:false}}}}});
+ dC('bars');CH.bars=new Chart($('cBars'),{type:'bar',data:{labels:['House Hack','Buy & Hold','BRRRR','Fix & Flip','Rental'],datasets:[{data:[S.hh,S.bh,S.br,S.fl,S.rt],backgroundColor:[CX.ba,CX.ga,CX.golda,CX.ra,'rgba(120,90,210,.14)'],borderColor:[CX.b,CX.g,CX.gold,CX.r,'#7a5ad2'],borderWidth:1.5,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{max:100,grid:{color:CX.grid}},y:{grid:{display:false},ticks:{font:{size:10,family:"'DM Sans',sans-serif"}}}}}});
+ var yrs2=Array.from({length:11},function(_,i){return i;});
+ var pv2=yrs2.map(function(y){return Math.round(p*Math.pow(1+appr,y));});
+ var eqs2=yrs2.map(function(y){if(y===0)return Math.round(f.dn);var bal=f.loan;for(var m=0;m<y*12;m++){var int=bal*0.0685/12;bal-=(f.pi-int);}return Math.round(pv2[y]-Math.max(0,bal));});
+ dC('wealth');CH.wealth=new Chart($('cWealth'),{type:'line',data:{labels:yrs2.map(function(y){return 'Yr'+y;}),datasets:[{label:'Property Value',data:pv2,borderColor:CX.gold,backgroundColor:CX.golda,fill:true,tension:0.3,pointRadius:3},{label:'Your Equity',data:eqs2,borderColor:CX.g,backgroundColor:CX.ga,fill:true,tension:0.3,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{padding:8,font:{size:9}}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+Math.round(c.parsed.y).toLocaleString();}}}},scales:{y:{ticks:{callback:function(v){return '$'+(v/1000).toFixed(0)+'k';}},grid:{color:CX.grid}},x:{grid:{display:false}}}}});
+}
+function buildProj(p,f){
+ var appr=D.appr/100,rent=D.rent,vac=D.vac/100,rows='';
+ [1,3,5,10].forEach(function(y){
+  var val=Math.round(p*Math.pow(1+appr,y));
+  var bal=f.loan;for(var m=0;m<y*12;m++){var int=bal*0.0685/12;bal-=(f.pi-int);}
+  var eq=Math.round(val-Math.max(0,bal));
+  var rg=rent*Math.pow(1.03,y-1);
+  var cf=Math.round(rg*(1-vac)-rg*0.10-f.pi-(y<=3?f.mM:0)-f.tM-f.iM);
+  var cfTxt=(cf>=0?'+$':'-$')+Math.abs(cf).toLocaleString();
+  rows+='<tr><td>Yr '+y+(y===1?' (HH)':'')+'</td><td>'+money(val)+'</td><td style="color:var(--green)">'+money(eq)+'</td><td style="color:'+(cf>=0?'var(--green)':'var(--red)')+'">'+cfTxt+'/mo</td></tr>';
+ });
+ $('projBody').innerHTML=rows;
+}
+
+function runAnalysis(){
+ gather();
+ if(!D.price){alert('Enter a list price.');return;}
+ curP=D.price;
+ var slider=$('slider');
+ slider.min=Math.round(D.price*0.80/1000)*1000;
+ slider.max=Math.round(D.price*1.10/1000)*1000;
+ slider.value=D.price;
+ $('slMin').textContent=money(slider.min)+' (-20%)';
+ $('slMid').textContent=money(D.price)+' list';
+ $('slMax').textContent=money(slider.max)+' (+10%)';
+ fillSlider();
+ go('scDash');
+ render(D.price);
+}
+function fillSlider(){var s=$('slider');var pct=(s.value-s.min)/(s.max-s.min)*100;s.style.background='linear-gradient(to right,var(--blue) 0%,var(--blue) '+pct+'%,var(--s4) '+pct+'%,var(--s4) 100%)';}
+$('slider').addEventListener('input',function(){curP=+this.value;fillSlider();render(curP);});
+
+document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});document.querySelectorAll('.page').forEach(function(x){x.classList.remove('on');});t.classList.add('on');$(t.dataset.p).classList.add('on');});});
+
+// ===== AI research & valuation =====
+function aiFill(){
+ var addr=$('inAddr').value.trim(); var key=$('inKey').value.trim();
+ if(!addr){$('aiStatus').innerHTML='<span class="err">Enter an address first.</span>';return;}
+ if(!key){$('aiStatus').innerHTML='<span class="err">Paste your Anthropic API key first.</span>';return;}
+ $('btnAI').disabled=true;
+ $('aiStatus').innerHTML='<span class="spin"></span>Researching listing, sold comps, and rent comps across the web… (this can take 30–60s)';
+ var prompt='You are a meticulous real estate appraiser and rental analyst. Use web search to research the subject property and its comparables, then reconcile a market value. Search multiple sources (listing sites, county records, rental sites) and cross-check. '+
+  'Return ONLY a JSON object (no prose, no markdown fences) with EXACTLY these keys:\n'+
+  '{"price":num,"zest":num,"value":num,"valueLow":num,"valueHigh":num,"confidence":num,"confidenceReason":str,'+
+  '"beds":num,"baths":num,"sqft":num,"yr":num,"tax":num,"ins":num,"rent":num,"appr":num,"vac":num,"cond":num,"loc":"strong|moderate|weak","arv":num,"rehab":num,"dom":num,'+
+  '"saleComps":[{"address":str,"soldPrice":num,"beds":num,"sqft":num,"ppsf":num,"adjusted":num}],'+
+  '"rentComps":[{"address":str,"beds":num,"rent":num}],'+
+  '"roomRents":[{"name":str,"rent":num,"why":str}],'+
+  '"sources":[str],"compNote":str}\n'+
+  'Definitions: price=current list price; zest=an automated value estimate (e.g. Zestimate/Redfin) if found else your AVM; value=YOUR reconciled market value point estimate; valueLow/valueHigh=your value range; confidence=0-100 reflecting comp quantity/agreement; '+
+  'value/arv/rehab/tax/ins in USD; rent=whole-house monthly; appr=annual % number; vac=% number; cond=0-100 (85+ renovated, 45-64 dated, <25 major rehab); loc=demand strength; dom=days on market for submarket. '+
+  'saleComps: 3-6 recent nearby sold comps with per-sqft and a size/condition-adjusted value contribution. rentComps: 2-5 rental comps. roomRents: one entry per rentable bedroom (beds minus 1, since owner occupies one); name the room, estimate monthly rent, and give a one-sentence reason citing private bath/size/level/location. sources: list the site names or domains you used. compNote: 1-2 sentences on how you reconciled the comps. '+
+  'If a value is unknown, estimate from comps rather than leaving blank. Subject property: '+addr;
+ fetch('https://api.anthropic.com/v1/messages',{
+  method:'POST',
+  headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+  body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4096,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})
+ }).then(function(r){return r.json();}).then(function(data){
+  if(data.error){throw new Error(data.error.message||'API error');}
+  var txt=(data.content||[]).filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('');
+  txt=txt.replace(/```json/g,'').replace(/```/g,'').trim();
+  var m=txt.match(/\{[\s\S]*\}/); if(m)txt=m[0];
+  var o=JSON.parse(txt);
+  VAL=o;
+  if($('inAddr').value)$('fAddr').value=$('inAddr').value;
+  var map={price:'fPrice',beds:'fBeds',baths:'fBaths',sqft:'fSqft',yr:'fYr',tax:'fTax',ins:'fIns',rent:'fRent',appr:'fAppr',vac:'fVac',cond:'fCond',arv:'fArv',rehab:'fRehab',dom:'fDom'};
+  Object.keys(map).forEach(function(k){if(o[k]!==undefined&&o[k]!==null&&$(map[k]))$(map[k]).value=o[k];});
+  // est value field: prefer reconciled value
+  if(o.value)$('fZest').value=o.value; else if(o.zest)$('fZest').value=o.zest;
+  if(o.loc&&['strong','moderate','weak'].indexOf(o.loc)>=0)$('fLoc').value=o.loc;
+  // room rents -> override slots
+  suggestRooms();
+  if(o.roomRents&&o.roomRents.length){var slots=document.querySelectorAll('.roomRent');o.roomRents.forEach(function(rm,i){if(slots[i]&&rm.rent)slots[i].value=rm.rent;});}
+  $('aiStatus').innerHTML='<span class="ok">Research complete — value '+money(o.value||o.zest||0)+' (confidence '+(o.confidence||'?')+'). Review fields, then Run Analysis. Full comps are on the Valuation tab.</span>';
+ }).catch(function(e){
+  $('aiStatus').innerHTML='<span class="err">Research failed: '+e.message+'. If this is a CORS/network block, fill fields manually — scoring still works (the Valuation tab needs the AI step).</span>';
+ }).finally(function(){$('btnAI').disabled=false;});
+}
+
+</script>
+</body>
+</html>
